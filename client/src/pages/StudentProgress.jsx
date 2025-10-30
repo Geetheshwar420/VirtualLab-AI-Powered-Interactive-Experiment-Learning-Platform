@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import ThemeToggle from '../components/ThemeToggle';
 
 function StudentProgress({ user, onLogout }) {
   const { student_id } = useParams();
@@ -47,6 +48,7 @@ function StudentProgress({ user, onLogout }) {
         </div>
         <div className="nav-buttons">
           <button onClick={() => navigate('/dashboard')}>Back to Dashboard</button>
+          <ThemeToggle inline />
           <button onClick={handleLogout}>Logout</button>
         </div>
       </div>

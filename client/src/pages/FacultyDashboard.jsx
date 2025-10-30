@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
+import ThemeToggle from '../components/ThemeToggle';
 
 function FacultyDashboard({ user, onLogout }) {
   const [experiments, setExperiments] = useState([]);
@@ -94,17 +95,18 @@ function FacultyDashboard({ user, onLogout }) {
           <Link to="/profile" className="nav-link">
             <button>👤 My Profile</button>
           </Link>
+          <ThemeToggle inline />
           <button onClick={handleLogout}>Logout</button>
         </div>
       </div>
 
       <div className="container">
-        <h2 style={{ color: 'white', marginBottom: '20px' }}>Your Experiments</h2>
+        <h2 style={{ color: 'var(--text-color)', marginBottom: '20px' }}>Your Experiments</h2>
         <div className="grid">
           {experiments.map((exp) => (
             <div key={exp.id} className="experiment-card">
               <h3>{exp.name}</h3>
-              <p style={{ color: '#666', fontSize: '14px', marginBottom: '16px' }}>
+              <p style={{ color: 'var(--muted)', fontSize: '14px', marginBottom: '16px' }}>
                 {exp.explanation?.substring(0, 100)}...
               </p>
               <div style={{ display: 'grid', gridTemplateColumns: exp.faculty_id === user.id ? '1fr 1fr' : '1fr', gap: '10px' }}>
@@ -125,7 +127,7 @@ function FacultyDashboard({ user, onLogout }) {
           ))}
         </div>
 
-        <h2 style={{ color: 'white', marginBottom: '20px', marginTop: '40px' }}>Student Progress</h2>
+        <h2 style={{ color: 'var(--text-color)', marginBottom: '20px', marginTop: '40px' }}>Student Progress</h2>
         <div className="card">
           <table>
             <caption className="sr-only">Students and actions</caption>

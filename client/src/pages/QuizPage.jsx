@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import ThemeToggle from '../components/ThemeToggle';
 
 function QuizPage({ user, onLogout }) {
   const { id } = useParams();
@@ -119,18 +120,19 @@ function QuizPage({ user, onLogout }) {
           <div className="card" style={{ textAlign: 'center', padding: '40px' }}>
             <div style={{ fontSize: '48px', marginBottom: '20px' }}>✅</div>
             <h2>You have already completed this quiz</h2>
-            <p style={{ color: '#666', marginBottom: '20px' }}>
+            <p className="text-muted" style={{ marginBottom: '20px' }}>
               Each quiz can only be attempted once. Your previous score has been recorded.
             </p>
             {previousScore && (
               <div style={{
-                background: '#f0f0f0',
+                background: 'var(--card-bg)',
                 padding: '20px',
                 borderRadius: '8px',
-                marginBottom: '20px'
+                marginBottom: '20px',
+                border: '1px solid var(--card-border)'
               }}>
-                <p style={{ fontSize: '14px', color: '#666' }}>Your Score</p>
-                <p style={{ fontSize: '32px', fontWeight: 'bold', color: '#667eea' }}>
+                <p className="text-muted" style={{ fontSize: '14px' }}>Your Score</p>
+                <p style={{ fontSize: '32px', fontWeight: 'bold', color: 'var(--primary)' }}>
                   {previousScore.score?.toFixed(1)}%
                 </p>
               </div>
@@ -151,25 +153,24 @@ function QuizPage({ user, onLogout }) {
           </div>
           <div className="nav-buttons">
             <button onClick={() => navigate('/dashboard')}>Back to Dashboard</button>
+            <ThemeToggle inline />
             <button onClick={handleLogout}>Logout</button>
           </div>
         </div>
 
         <div className="container">
           <div className="score-display">
-            <h2>Your Score</h2>
+            <h2>🎉 Well done!</h2>
             <div style={{ fontSize: '64px', fontWeight: 'bold', margin: '20px 0' }}>
               {score.score.toFixed(1)}%
             </div>
-            <p>{score.correctCount} out of {score.totalQuestions} correct</p>
+            <p style={{ fontSize: '18px', marginBottom: '30px' }}>
+              You got {score.correctCount} out of {score.totalQuestions} questions correct.
+            </p>
           </div>
-
           <div className="card" style={{ textAlign: 'center' }}>
-            <button onClick={() => navigate('/dashboard')} style={{ marginRight: '10px' }}>
+            <button onClick={() => navigate('/dashboard')} style={{ width: '100%', padding: '14px 24px', fontSize: '16px' }}>
               Back to Dashboard
-            </button>
-            <button onClick={() => window.location.reload()}>
-              Retake Quiz
             </button>
           </div>
         </div>
@@ -195,17 +196,10 @@ function QuizPage({ user, onLogout }) {
           <div className="card" style={{ textAlign: 'center', padding: '40px' }}>
             <div style={{ fontSize: '48px', marginBottom: '20px' }}>📝</div>
             <h2>Ready to Start?</h2>
-            <p style={{ color: '#666', marginBottom: '30px', fontSize: '16px' }}>
+            <p className="text-muted" style={{ marginBottom: '30px', fontSize: '16px' }}>
               Once you start the quiz, you won't be able to switch tabs or leave the quiz page.
             </p>
-            <div style={{
-              background: '#fff3e0',
-              padding: '15px',
-              borderRadius: '8px',
-              marginBottom: '30px',
-              color: '#f39c12',
-              fontSize: '14px'
-            }}>
+            <div className="alert alert-warning" style={{ marginBottom: '30px' }}>
               ⚠️ <strong>Important:</strong> Keep this window in focus. Switching tabs will trigger a warning.
             </div>
             <button
@@ -250,9 +244,9 @@ function QuizPage({ user, onLogout }) {
             <div key={question.id} className="question" style={{
               marginBottom: '25px',
               padding: '15px',
-              background: '#f9f9f9',
+              background: 'var(--card-bg)',
               borderRadius: '8px',
-              border: '1px solid #eee'
+              border: '1px solid var(--card-border)'
             }}>
               <h3 style={{ marginBottom: '15px', fontSize: 'clamp(16px, 5vw, 18px)' }}>
                 {idx + 1}. {question.question_text}
@@ -261,9 +255,9 @@ function QuizPage({ user, onLogout }) {
                 <div key={option.id} className="option" style={{
                   marginBottom: '10px',
                   padding: '12px',
-                  background: 'white',
+                  background: 'var(--card-bg)',
                   borderRadius: '6px',
-                  border: '1px solid #ddd',
+                  border: '1px solid var(--card-border)',
                   cursor: 'pointer',
                   transition: 'all 0.2s'
                 }}>

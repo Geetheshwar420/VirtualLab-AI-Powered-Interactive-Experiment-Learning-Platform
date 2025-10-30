@@ -41,7 +41,8 @@ export async function generateExplanation(youtubeUrl) {
         headers: {
           'Authorization': `Bearer ${OPENAI_API_KEY}`,
           'Content-Type': 'application/json'
-        }
+        },
+        timeout: 10000
       }
     );
 
@@ -133,8 +134,15 @@ router.post('/chat', verifyToken, async (req, res) => {
 
     res.json({ message, response: aiResponse });
   } catch (err) {
+    const status = err?.response?.status;
+    if (status === 429) {
+      return res.status(429).json({ error: 'AI rate limit reached. Please wait a moment and try again.' });
+    }
+    if (status === 401 || status === 403) {
+      return res.status(500).json({ error: 'AI service not authorized. Please check OPENAI_API_KEY.' });
+    }
     console.error('Chat error:', err.message);
-    res.status(500).json({ error: 'Error processing chat message' });
+    return res.status(500).json({ error: 'Error processing chat message' });
   }
 });
 

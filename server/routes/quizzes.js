@@ -348,8 +348,19 @@ Requirements:
     let questions;
 
     try {
-      questions = JSON.parse(aiResponse);
+      const content = (aiResponse && typeof aiResponse === 'string') ? aiResponse.trim() : '';
+      let jsonText = content;
+      const startIdx = content.indexOf('[');
+      const endIdx = content.lastIndexOf(']');
+      if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
+        jsonText = content.slice(startIdx, endIdx + 1);
+      }
+      questions = JSON.parse(jsonText);
     } catch (parseErr) {
+      console.error('AI parse error for generated questions', {
+        error: parseErr && parseErr.message,
+        preview: typeof aiResponse === 'string' ? aiResponse.slice(0, 200) : String(aiResponse)
+      });
       return res.status(500).json({ error: 'Failed to parse AI response' });
     }
 

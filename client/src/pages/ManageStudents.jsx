@@ -2,6 +2,7 @@
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
+import ThemeToggle from '../components/ThemeToggle';
 
 function ManageStudents({ user, onLogout }) {
   const [students, setStudents] = useState([]);
@@ -119,6 +120,7 @@ function ManageStudents({ user, onLogout }) {
         </div>
         <div className="nav-buttons">
           <button onClick={() => navigate('/dashboard')}>Back to Dashboard</button>
+          <ThemeToggle inline />
           <button onClick={handleLogout}>Logout</button>
         </div>
       </div>
@@ -197,15 +199,15 @@ function ManageStudents({ user, onLogout }) {
                     style={{
                       padding: '12px',
                       marginBottom: '10px',
-                      background: '#f9f9f9',
+                      background: 'var(--card-bg)',
                       borderRadius: '6px',
-                      borderLeft: '4px solid #667eea'
+                      borderLeft: '4px solid var(--primary)'
                     }}
                   >
-                    <div style={{ fontWeight: '600', color: '#333' }}>
+                    <div style={{ fontWeight: '600', color: 'var(--text-color)' }}>
                       {student.name}
                     </div>
-                    <div style={{ fontSize: '13px', color: '#666', marginTop: '4px' }}>
+                    <div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '4px' }}>
                       📧 {student.email}
                     </div>
                     <button
@@ -214,7 +216,7 @@ function ManageStudents({ user, onLogout }) {
                         marginTop: '8px',
                         padding: '6px 12px',
                         fontSize: '12px',
-                        background: '#667eea'
+                        background: 'var(--primary)'
                       }}
                     >
                       View Progress
@@ -223,7 +225,7 @@ function ManageStudents({ user, onLogout }) {
                 ))}
               </div>
             ) : (
-              <div style={{ textAlign: 'center', color: '#999', padding: '40px 20px' }}>
+              <div style={{ textAlign: 'center', color: 'var(--muted)', padding: '40px 20px' }}>
                 <p>No students enrolled yet.</p>
                 <p>Add your first student using the form on the left!</p>
               </div>

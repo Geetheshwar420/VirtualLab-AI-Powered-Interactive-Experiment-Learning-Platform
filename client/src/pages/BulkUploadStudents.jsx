@@ -119,15 +119,15 @@ function BulkUploadStudents({ user, onLogout }) {
       <div className="container" style={{ maxWidth: '800px' }}>
         <div className="card">
           <h2>📋 CSV Format</h2>
-          <p style={{ color: '#666', marginBottom: '15px' }}>
+          <p style={{ color: 'var(--muted)', marginBottom: '15px' }}>
             Your CSV file must have three columns: <strong>name</strong>, <strong>email</strong>, <strong>password</strong>
           </p>
-          <p style={{ background: '#f0f0f0', padding: '10px', borderRadius: '6px', fontFamily: 'monospace', fontSize: '13px', marginBottom: '15px' }}>
+          <p style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', padding: '10px', borderRadius: '6px', fontFamily: 'monospace', fontSize: '13px', marginBottom: '15px' }}>
             name,email,password<br/>
             John Doe,john@example.com,Password123!<br/>
             Jane Smith,jane@example.com,Password456!
           </p>
-          <button onClick={downloadTemplate} style={{ background: '#3498db' }}>
+          <button onClick={downloadTemplate}>
             ⬇️ Download Template
           </button>
         </div>
@@ -148,7 +148,7 @@ function BulkUploadStudents({ user, onLogout }) {
               />
             </div>
 
-            <div style={{ textAlign: 'center', margin: '20px 0', color: '#999' }}>
+            <div style={{ textAlign: 'center', margin: '20px 0', color: 'var(--muted)' }}>
               OR
             </div>
 
@@ -169,7 +169,7 @@ function BulkUploadStudents({ user, onLogout }) {
           </form>
 
           {result && (
-            <div style={{ marginTop: '30px', paddingTop: '30px', borderTop: '1px solid #eee' }}>
+            <div style={{ marginTop: '30px', paddingTop: '30px', borderTop: '1px solid var(--card-border)' }}>
               <h3 style={{ marginBottom: '15px' }}>📊 Upload Results</h3>
               <div style={{
                 display: 'grid',
@@ -178,43 +178,46 @@ function BulkUploadStudents({ user, onLogout }) {
                 marginBottom: '20px'
               }}>
                 <div style={{
-                  background: '#e8f5e9',
+                  background: 'var(--card-bg)',
                   padding: '15px',
                   borderRadius: '6px',
-                  textAlign: 'center'
+                  textAlign: 'center',
+                  border: '1px solid var(--card-border)'
                 }}>
-                  <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#27ae60' }}>
+                  <div style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--success)' }}>
                     {result.successful}
                   </div>
-                  <div style={{ fontSize: '13px', color: '#666', marginTop: '5px' }}>
+                  <div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '5px' }}>
                     Successful
                   </div>
                 </div>
 
                 <div style={{
-                  background: '#fff3e0',
+                  background: 'var(--card-bg)',
                   padding: '15px',
                   borderRadius: '6px',
-                  textAlign: 'center'
+                  textAlign: 'center',
+                  border: '1px solid var(--card-border)'
                 }}>
-                  <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#f39c12' }}>
+                  <div style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--primary)' }}>
                     {result.total}
                   </div>
-                  <div style={{ fontSize: '13px', color: '#666', marginTop: '5px' }}>
+                  <div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '5px' }}>
                     Total
                   </div>
                 </div>
 
                 <div style={{
-                  background: '#ffebee',
+                  background: 'var(--card-bg)',
                   padding: '15px',
                   borderRadius: '6px',
-                  textAlign: 'center'
+                  textAlign: 'center',
+                  border: '1px solid var(--card-border)'
                 }}>
-                  <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#e74c3c' }}>
+                  <div style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--danger)' }}>
                     {result.failed}
                   </div>
-                  <div style={{ fontSize: '13px', color: '#666', marginTop: '5px' }}>
+                  <div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '5px' }}>
                     Failed
                   </div>
                 </div>
@@ -222,16 +225,17 @@ function BulkUploadStudents({ user, onLogout }) {
 
               {result.errors && result.errors.length > 0 && (
                 <div>
-                  <h4 style={{ marginBottom: '10px', color: '#e74c3c' }}>⚠️ Errors</h4>
+                  <h4 style={{ marginBottom: '10px', color: 'var(--danger)' }}>⚠️ Errors</h4>
                   <div style={{
-                    background: '#ffebee',
+                    background: 'var(--card-bg)',
                     padding: '15px',
                     borderRadius: '6px',
                     maxHeight: '200px',
-                    overflowY: 'auto'
+                    overflowY: 'auto',
+                    border: '1px solid var(--card-border)'
                   }}>
                     {result.errors.map((err, idx) => (
-                      <div key={idx} style={{ fontSize: '13px', color: '#c33', marginBottom: '8px' }}>
+                      <div key={idx} style={{ fontSize: '13px', color: 'var(--danger)', marginBottom: '8px' }}>
                         • {err}
                       </div>
                     ))}

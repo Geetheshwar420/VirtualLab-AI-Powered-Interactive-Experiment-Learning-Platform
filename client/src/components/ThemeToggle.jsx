@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Sun, Moon } from 'lucide-react';
 
-function ThemeToggle() {
+function ThemeToggle({ inline = false }) {
   const [theme, setTheme] = useState('light');
 
   useEffect(() => {
@@ -20,12 +20,14 @@ function ThemeToggle() {
     document.documentElement.classList.toggle('dark', next === 'dark');
   };
 
+  const baseClasses = 'px-3 py-2 rounded-full shadow-md bg-white text-black dark:bg-gray-800 dark:text-gray-100 border border-gray-200 dark:border-gray-700';
+  const positionClasses = inline ? '' : 'fixed top-4 right-4 z-50';
   return (
     <button
       onClick={toggle}
       aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
       title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-      className="fixed bottom-4 right-4 z-50 px-3 py-2 rounded-full shadow-md bg-white text-black dark:bg-gray-800 dark:text-gray-100 border border-gray-200 dark:border-gray-700"
+      className={`${positionClasses} ${baseClasses}`}
       style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
     >
       {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}

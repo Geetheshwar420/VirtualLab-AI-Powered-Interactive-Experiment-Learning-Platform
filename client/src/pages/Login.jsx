@@ -31,7 +31,8 @@ function Login({ setUser }) {
   };
 
   return (
-    <div className="container" style={{ maxWidth: '400px', marginTop: '100px' }}>
+    <div>
+      <div className="container" style={{ maxWidth: '400px', marginTop: '100px' }}>
       <div className="card">
         <h1 style={{ textAlign: 'center', marginBottom: '30px', color: '#667eea' }}>
           Login
@@ -47,6 +48,7 @@ function Login({ setUser }) {
               id="login-email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              autoComplete="username"
               required
             />
           </div>
@@ -57,6 +59,7 @@ function Login({ setUser }) {
               id="login-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
               required
             />
           </div>
@@ -64,6 +67,7 @@ function Login({ setUser }) {
             {submitting ? 'Signing in...' : 'Login'}
           </button>
         </form>
+      </div>
       </div>
     </div>
   );

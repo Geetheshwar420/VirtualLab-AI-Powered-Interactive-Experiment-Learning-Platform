@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
+import ThemeToggle from '../components/ThemeToggle';
 
 function QuizBuilder({ user, onLogout }) {
   const { experiment_id } = useParams();
@@ -210,6 +211,7 @@ function QuizBuilder({ user, onLogout }) {
         </div>
         <div className="nav-buttons">
           <button onClick={() => navigate('/dashboard')}>Back to Dashboard</button>
+          <ThemeToggle inline />
           <button onClick={handleLogout}>Logout</button>
         </div>
       </div>
@@ -263,19 +265,19 @@ function QuizBuilder({ user, onLogout }) {
             <h2>Add Questions to Quiz</h2>
             {!mode && (
               <div style={{ marginBottom: '20px' }}>
-                <p style={{ color: '#666', marginBottom: '15px' }}>Choose how to add questions:</p>
+                <p style={{ color: 'var(--muted)', marginBottom: '15px' }}>Choose how to add questions:</p>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                   <button
                     type="button"
                     onClick={() => setMode('manual')}
-                    style={{ background: '#667eea', padding: '15px' }}
+                    style={{ background: 'var(--primary)', padding: '15px' }}
                   >
                     ✏️ Add Manually
                   </button>
                   <button
                     type="button"
                     onClick={() => setMode('ai')}
-                    style={{ background: '#764ba2', padding: '15px' }}
+                    style={{ background: 'var(--accent)', padding: '15px' }}
                   >
                     🤖 Generate with AI
                   </button>
@@ -284,7 +286,7 @@ function QuizBuilder({ user, onLogout }) {
             )}
 
             {mode === 'ai' && (
-              <div style={{ marginBottom: '20px', padding: '15px', background: '#f0f0f0', borderRadius: '6px' }}>
+              <div style={{ marginBottom: '20px', padding: '15px', background: 'var(--card-bg)', borderRadius: '6px', border: '1px solid var(--card-border)' }}>
                 <h3>Generate Questions with AI</h3>
                 <div className="form-group">
                   <label htmlFor="num-questions">How many questions do you want? (1-20)</label>
@@ -303,14 +305,14 @@ function QuizBuilder({ user, onLogout }) {
                     onClick={handleGenerateAI}
                     disabled={generatingAI}
                     aria-busy={generatingAI}
-                    style={{ background: '#764ba2' }}
+                    style={{ background: 'var(--accent)' }}
                   >
                     {generatingAI ? '⏳ Generating...' : '🤖 Generate'}
                   </button>
                   <button
                     type="button"
                     onClick={() => setMode(null)}
-                    style={{ background: '#95a5a6' }}
+                    style={{ background: '#64748b' }}
                   >
                     Cancel
                   </button>
@@ -319,13 +321,13 @@ function QuizBuilder({ user, onLogout }) {
             )}
 
             {mode === 'ai-confirm' && aiQuestions.length > 0 && (
-              <div style={{ marginBottom: '20px', padding: '15px', background: '#f9f9f9', borderRadius: '6px' }}>
+              <div style={{ marginBottom: '20px', padding: '15px', background: 'var(--card-bg)', borderRadius: '6px', border: '1px solid var(--card-border)' }}>
                 <h3>Review & Confirm Questions</h3>
-                <p style={{ color: '#666', fontSize: '14px', marginBottom: '15px' }}>
+                <p style={{ color: 'var(--muted)', fontSize: '14px', marginBottom: '15px' }}>
                   You can edit, remove, or confirm these questions:
                 </p>
                 {aiQuestions.map((q, qIdx) => (
-                  <div key={qIdx} style={{ marginBottom: '20px', padding: '15px', background: 'white', borderRadius: '6px', border: '1px solid #ddd' }}>
+                  <div key={qIdx} style={{ marginBottom: '20px', padding: '15px', background: 'var(--card-bg)', borderRadius: '6px', border: '1px solid var(--card-border)' }}>
                     <div className="form-group">
                       <label>Question {qIdx + 1}</label>
                       <textarea
@@ -335,7 +337,7 @@ function QuizBuilder({ user, onLogout }) {
                       />
                     </div>
                     {q.options.map((opt, oIdx) => (
-                      <div key={oIdx} style={{ marginBottom: '10px', padding: '10px', background: '#f5f5f5', borderRadius: '4px' }}>
+                      <div key={oIdx} style={{ marginBottom: '10px', padding: '10px', background: 'var(--card-bg)', borderRadius: '4px', border: '1px solid var(--card-border)' }}>
                         <input
                           type="text"
                           value={opt.text}
@@ -399,7 +401,7 @@ function QuizBuilder({ user, onLogout }) {
 
               <h3 style={{ marginTop: '20px', marginBottom: '15px' }}>Options</h3>
               {options.map((option, idx) => (
-                <div key={idx} style={{ marginBottom: '15px', padding: '10px', background: '#f9f9f9', borderRadius: '6px' }}>
+                <div key={idx} style={{ marginBottom: '15px', padding: '10px', background: 'var(--card-bg)', borderRadius: '6px', border: '1px solid var(--card-border)' }}>
                   <input
                     type="text"
                     value={option.text}

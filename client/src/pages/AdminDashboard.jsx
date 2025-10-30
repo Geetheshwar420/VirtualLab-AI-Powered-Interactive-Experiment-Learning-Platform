@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import ThemeToggle from '../components/ThemeToggle';
 
 function AdminDashboard({ user, onLogout }) {
   const [faculty, setFaculty] = useState([]);
@@ -84,6 +85,7 @@ function AdminDashboard({ user, onLogout }) {
           <p>Manage faculty accounts</p>
         </div>
         <div className="nav-buttons">
+          <ThemeToggle inline />
           <button onClick={handleLogout}>Logout</button>
         </div>
       </div>
@@ -104,6 +106,7 @@ function AdminDashboard({ user, onLogout }) {
                   value={newFaculty.name}
                   onChange={(e) => setNewFaculty({ ...newFaculty, name: e.target.value })}
                   placeholder="e.g., Dr. John Smith"
+                  autoComplete="name"
                   required
                 />
               </div>
@@ -115,6 +118,7 @@ function AdminDashboard({ user, onLogout }) {
                   value={newFaculty.email}
                   onChange={(e) => setNewFaculty({ ...newFaculty, email: e.target.value })}
                   placeholder="e.g., john@university.edu"
+                  autoComplete="email"
                   required
                 />
               </div>
@@ -126,6 +130,7 @@ function AdminDashboard({ user, onLogout }) {
                   value={newFaculty.password}
                   onChange={(e) => setNewFaculty({ ...newFaculty, password: e.target.value })}
                   placeholder="Enter a strong password"
+                  autoComplete="new-password"
                   required
                 />
               </div>
@@ -147,19 +152,19 @@ function AdminDashboard({ user, onLogout }) {
                     style={{
                       padding: '12px',
                       marginBottom: '10px',
-                      background: '#f9f9f9',
+                      background: 'var(--card-bg)',
                       borderRadius: '6px',
-                      borderLeft: '4px solid #667eea',
+                      borderLeft: '4px solid var(--primary)',
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center'
                     }}
                   >
                     <div>
-                      <div style={{ fontWeight: '600', color: '#333' }}>
+                      <div style={{ fontWeight: '600', color: 'var(--text-color)' }}>
                         {fac.name}
                       </div>
-                      <div style={{ fontSize: '13px', color: '#666', marginTop: '4px' }}>
+                      <div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '4px' }}>
                         📧 {fac.email}
                       </div>
                     </div>
@@ -168,7 +173,7 @@ function AdminDashboard({ user, onLogout }) {
                       style={{
                         padding: '6px 12px',
                         fontSize: '12px',
-                        background: '#e74c3c'
+                        background: 'var(--danger)'
                       }}
                     >
                       Delete
@@ -177,7 +182,7 @@ function AdminDashboard({ user, onLogout }) {
                 ))}
               </div>
             ) : (
-              <div style={{ textAlign: 'center', color: '#999', padding: '40px 20px' }}>
+              <div style={{ textAlign: 'center', color: 'var(--muted)', padding: '40px 20px' }}>
                 <p>No faculty members yet.</p>
                 <p>Add your first faculty using the form on the left!</p>
               </div>

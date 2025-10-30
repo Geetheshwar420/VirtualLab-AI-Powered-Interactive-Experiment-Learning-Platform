@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import ChatWidget from '../components/ChatWidget';
 import { toast } from 'react-hot-toast';
+import ThemeToggle from '../components/ThemeToggle';
 
 function ExperimentPage({ user, onLogout }) {
   const { id } = useParams();
@@ -69,6 +70,7 @@ function ExperimentPage({ user, onLogout }) {
         </div>
         <div className="nav-buttons">
           <button onClick={() => navigate('/dashboard')}>Back to Dashboard</button>
+          <ThemeToggle inline />
           <button onClick={handleLogout}>Logout</button>
         </div>
       </div>
@@ -103,14 +105,7 @@ function ExperimentPage({ user, onLogout }) {
                   onLoad={() => setVideoWatched(true)}
                 ></iframe>
               </div>
-              <div style={{
-                background: videoWatched ? '#e8f5e9' : '#fff3e0',
-                padding: '12px',
-                borderRadius: '6px',
-                color: videoWatched ? '#27ae60' : '#f39c12',
-                fontSize: '14px',
-                fontWeight: '500'
-              }}>
+              <div className={videoWatched ? 'alert alert-success' : 'alert alert-warning'} style={{ fontSize: '14px', fontWeight: 500 }}>
                 {videoWatched ? '✅ Video loaded - You can now take the quiz' : '⏳ Please watch the video before taking the quiz'}
               </div>
             </div>
@@ -130,14 +125,7 @@ function ExperimentPage({ user, onLogout }) {
           <div className="card">
             <h2 style={{ fontSize: 'clamp(18px, 5vw, 22px)' }}>📝 Available Quizzes</h2>
             {!videoWatched && (
-              <div style={{
-                background: '#ffebee',
-                padding: '15px',
-                borderRadius: '6px',
-                color: '#c33',
-                marginBottom: '15px',
-                fontSize: 'clamp(13px, 4vw, 14px)'
-              }}>
+              <div className="alert alert-warning" style={{ marginBottom: '15px', fontSize: 'clamp(13px, 4vw, 14px)' }}>
                 ⚠️ Please watch the video first before taking the quiz
               </div>
             )}

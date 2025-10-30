@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
+import ThemeToggle from '../components/ThemeToggle';
 
 function AddExperiment({ user, onLogout }) {
   const [name, setName] = useState('');
@@ -55,6 +56,7 @@ function AddExperiment({ user, onLogout }) {
         </div>
         <div className="nav-buttons">
           <button onClick={() => navigate('/dashboard')}>Back to Dashboard</button>
+          <ThemeToggle inline />
           <button onClick={handleLogout}>Logout</button>
         </div>
       </div>
@@ -99,7 +101,7 @@ function AddExperiment({ user, onLogout }) {
                 onChange={(e) => setExplanation(e.target.value)}
                 placeholder="Describe the experiment's objective, procedure, and conclusion. Leave blank to auto-generate using AI from the YouTube video."
               />
-              <p style={{ color: '#666', fontSize: '13px', marginTop: '8px' }}>
+              <p style={{ color: 'var(--muted)', fontSize: '13px', marginTop: '8px' }}>
                 Leave blank to auto-generate using AI from the YouTube video.
               </p>
             </div>

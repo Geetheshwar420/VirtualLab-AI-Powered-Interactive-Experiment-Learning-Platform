@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import ThemeToggle from '../components/ThemeToggle';
 
 function StudentProfile({ user, onLogout }) {
   const [profile, setProfile] = useState(null);
@@ -121,6 +122,7 @@ function StudentProfile({ user, onLogout }) {
         </div>
         <div className="nav-buttons">
           <button onClick={() => navigate('/dashboard')}>Back to Dashboard</button>
+          <ThemeToggle inline />
           <button onClick={handleLogout}>Logout</button>
         </div>
       </div>
@@ -136,34 +138,30 @@ function StudentProfile({ user, onLogout }) {
             {!editMode ? (
               <div>
                 <div style={{ marginBottom: '15px' }}>
-                  <label style={{ fontWeight: '600', color: '#667eea' }}>Name</label>
-                  <p style={{ fontSize: '16px', marginTop: '5px' }}>{profile.name}</p>
+                  <label style={{ fontWeight: '600', color: 'var(--primary)' }}>Name</label>
+                  <p style={{ fontSize: '16px', marginTop: '5px', color: 'var(--text-color)' }}>{profile.name}</p>
                 </div>
 
                 <div style={{ marginBottom: '15px' }}>
-                  <label style={{ fontWeight: '600', color: '#667eea' }}>Email</label>
-                  <p style={{ fontSize: '16px', marginTop: '5px' }}>{profile.email}</p>
+                  <label style={{ fontWeight: '600', color: 'var(--primary)' }}>Email</label>
+                  <p style={{ fontSize: '16px', marginTop: '5px', color: 'var(--text-color)' }}>{profile.email}</p>
                 </div>
 
                 <div style={{ marginBottom: '15px' }}>
-                  <label style={{ fontWeight: '600', color: '#667eea' }}>Role</label>
-                  <p style={{ fontSize: '16px', marginTop: '5px', textTransform: 'capitalize' }}>
+                  <label style={{ fontWeight: '600', color: 'var(--primary)' }}>Role</label>
+                  <p style={{ fontSize: '16px', marginTop: '5px', textTransform: 'capitalize', color: 'var(--text-color)' }}>
                     {profile.role}
                   </p>
                 </div>
 
                 <div style={{ marginBottom: '15px' }}>
-                  <label style={{ fontWeight: '600', color: '#667eea' }}>Bio</label>
-                  <p style={{ fontSize: '16px', marginTop: '5px', color: profile.bio ? '#333' : '#999' }}>
-                    {profile.bio || 'No bio added yet'}
-                  </p>
+                  <label style={{ fontWeight: '600', color: 'var(--primary)' }}>Bio</label>
+                  <p style={{ fontSize: '16px', marginTop: '5px', color: profile.bio ? 'var(--text-color)' : 'var(--muted)' }}>{profile.bio || 'No bio added yet'}</p>
                 </div>
 
                 <div style={{ marginBottom: '15px' }}>
-                  <label style={{ fontWeight: '600', color: '#667eea' }}>Phone</label>
-                  <p style={{ fontSize: '16px', marginTop: '5px', color: profile.phone ? '#333' : '#999' }}>
-                    {profile.phone || 'No phone added yet'}
-                  </p>
+                  <label style={{ fontWeight: '600', color: 'var(--primary)' }}>Phone</label>
+                  <p style={{ fontSize: '16px', marginTop: '5px', color: profile.phone ? 'var(--text-color)' : 'var(--muted)' }}>{profile.phone || 'No phone added yet'}</p>
                 </div>
 
                 <button onClick={() => setEditMode(true)} style={{ marginRight: '10px' }}>
@@ -215,6 +213,7 @@ function StudentProfile({ user, onLogout }) {
                       value={passwordData.currentPassword}
                       onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
                       placeholder="Enter current password"
+                      autoComplete="current-password"
                       required
                     />
                   </div>
@@ -226,6 +225,7 @@ function StudentProfile({ user, onLogout }) {
                       value={passwordData.newPassword}
                       onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
                       placeholder="Enter new password"
+                      autoComplete="new-password"
                       required
                     />
                   </div>
@@ -237,6 +237,7 @@ function StudentProfile({ user, onLogout }) {
                       value={passwordData.confirmPassword}
                       onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
                       placeholder="Confirm new password"
+                      autoComplete="new-password"
                       required
                     />
                   </div>
@@ -255,24 +256,13 @@ function StudentProfile({ user, onLogout }) {
           {/* Learning Progress */}
           {user?.role === 'student' && (
             <div className="card">
-            <h2>📊 Learning Progress</h2>
-            
-            <div style={{
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              color: 'white',
-              padding: '20px',
-              borderRadius: '8px',
-              marginBottom: '20px',
-              textAlign: 'center'
-            }}>
-              <p style={{ fontSize: '14px', opacity: 0.9 }}>Average Score</p>
-              <div style={{ fontSize: '48px', fontWeight: 'bold', margin: '10px 0' }}>
-                {avgScore}%
+              <h2>📊 Learning Progress</h2>
+
+              <div className="score-display">
+                <p style={{ fontSize: '14px', opacity: 0.9 }}>Average Score</p>
+                <div style={{ fontSize: '48px', fontWeight: 'bold', margin: '10px 0' }}>{avgScore}%</div>
+                <p style={{ fontSize: '14px', opacity: 0.9 }}>{progress?.attempts?.length || 0} quizzes completed</p>
               </div>
-              <p style={{ fontSize: '14px', opacity: 0.9 }}>
-                {progress?.attempts?.length || 0} quizzes completed
-              </p>
-            </div>
 
             {progress?.attempts && progress.attempts.length > 0 ? (
               <div>
@@ -284,18 +274,18 @@ function StudentProfile({ user, onLogout }) {
                       style={{
                         padding: '12px',
                         marginBottom: '10px',
-                        background: '#f9f9f9',
+                        background: 'var(--card-bg)',
                         borderRadius: '6px',
-                        borderLeft: `4px solid ${attempt.score >= 70 ? '#27ae60' : '#e74c3c'}`
+                        borderLeft: `4px solid ${attempt.score >= 70 ? 'var(--success)' : 'var(--danger)'}`
                       }}
                     >
-                      <div style={{ fontWeight: '600', color: '#333' }}>
+                      <div style={{ fontWeight: '600', color: 'var(--text-color)' }}>
                         {attempt.title}
                       </div>
-                      <div style={{ fontSize: '13px', color: '#666', marginTop: '4px' }}>
-                        Score: <strong>{attempt.score?.toFixed(1)}%</strong> ({attempt.correct_count || '-'} / {attempt.total_questions})
+                      <div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '4px' }}>
+                        Score: <strong style={{ color: 'var(--primary)' }}>{attempt.score?.toFixed(1)}%</strong> ({attempt.correct_count || '-'} / {attempt.total_questions})
                       </div>
-                      <div style={{ fontSize: '12px', color: '#999', marginTop: '4px' }}>
+                      <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '4px' }}>
                         {new Date(attempt.attempted_at).toLocaleDateString()}
                       </div>
                     </div>
@@ -303,7 +293,7 @@ function StudentProfile({ user, onLogout }) {
                 </div>
               </div>
             ) : (
-              <div style={{ textAlign: 'center', color: '#999', padding: '40px 20px' }}>
+              <div style={{ textAlign: 'center', color: 'var(--muted)', padding: '40px 20px' }}>
                 <p>No quiz attempts yet.</p>
                 <p>Go to an experiment and take a quiz to see your progress!</p>
               </div>

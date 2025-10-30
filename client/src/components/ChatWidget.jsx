@@ -6,6 +6,8 @@ function ChatWidget({ experimentId }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [cooldownUntil, setCooldownUntil] = useState(null);
+  const [, forceTick] = useState(0);
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -16,8 +18,22 @@ function ChatWidget({ experimentId }) {
     scrollToBottom();
   }, [messages]);
 
+  // Tick while cooling down so countdown can update
+  useEffect(() => {
+    if (!cooldownUntil) return;
+    const id = setInterval(() => forceTick(t => t + 1), 1000);
+    return () => clearInterval(id);
+  }, [cooldownUntil]);
+
   const handleSendMessage = async () => {
     if (!input.trim()) return;
+
+    // Prevent sending during cooldown (e.g., after 429)
+    if (cooldownUntil && Date.now() < cooldownUntil) {
+      const remain = Math.max(0, Math.ceil((cooldownUntil - Date.now()) / 1000));
+      setMessages(prev => [...prev, { type: 'ai', text: `Please wait ${remain}s before sending another message.` }]);
+      return;
+    }
 
     const userMessage = input;
     setInput('');
@@ -39,7 +55,17 @@ function ChatWidget({ experimentId }) {
 
       setMessages(prev => [...prev, { type: 'ai', text: response.data.response }]);
     } catch (err) {
-      setMessages(prev => [...prev, { type: 'ai', text: 'Error: Could not get response. Make sure OPENAI_API_KEY is set in .env' }]);
+      const status = err?.response?.status;
+      const apiMsg = err?.response?.data?.error;
+      if (status === 429) {
+        const waitMs = 30000; // 30 seconds
+        setCooldownUntil(Date.now() + waitMs);
+        setMessages(prev => [...prev, { type: 'ai', text: apiMsg || 'Rate limit reached. Please wait 30 seconds and try again.' }]);
+      } else if (status === 401 || status === 403) {
+        setMessages(prev => [...prev, { type: 'ai', text: apiMsg || 'AI service not authorized. Please check configuration.' }]);
+      } else {
+        setMessages(prev => [...prev, { type: 'ai', text: apiMsg || 'Error: Could not get response. Try again in a moment.' }]);
+      }
     } finally {
       setLoading(false);
     }
@@ -163,9 +189,9 @@ function ChatWidget({ experimentId }) {
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && !loading && handleSendMessage()}
+              onKeyPress={(e) => e.key === 'Enter' && !loading && !(cooldownUntil && Date.now() < cooldownUntil) && handleSendMessage()}
               placeholder="Type your question..."
-              disabled={loading}
+              disabled={loading || (cooldownUntil && Date.now() < cooldownUntil)}
               style={{
                 flex: 1,
                 padding: '10px 12px',
@@ -178,21 +204,21 @@ function ChatWidget({ experimentId }) {
             />
             <button
               onClick={handleSendMessage}
-              disabled={loading || !input.trim()}
+              disabled={loading || !input.trim() || (cooldownUntil && Date.now() < cooldownUntil)}
               style={{
                 padding: '10px 16px',
                 borderRadius: '20px',
                 background: '#667eea',
                 color: 'white',
                 border: 'none',
-                cursor: loading || !input.trim() ? 'not-allowed' : 'pointer',
+                cursor: (loading || !input.trim() || (cooldownUntil && Date.now() < cooldownUntil)) ? 'not-allowed' : 'pointer',
                 fontSize: '14px',
                 fontWeight: '600',
-                opacity: loading || !input.trim() ? 0.6 : 1,
+                opacity: (loading || !input.trim() || (cooldownUntil && Date.now() < cooldownUntil)) ? 0.6 : 1,
                 transition: 'all 0.2s'
               }}
             >
-              {loading ? '...' : '→'}
+              {loading ? '...' : (cooldownUntil && Date.now() < cooldownUntil) ? 'Wait' : '→'}
             </button>
           </div>
         </div>
