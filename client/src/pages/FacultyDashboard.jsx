@@ -6,6 +6,7 @@ function FacultyDashboard({ user, onLogout }) {
   const [experiments, setExperiments] = useState([]);
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -32,6 +33,22 @@ function FacultyDashboard({ user, onLogout }) {
   const handleLogout = () => {
     onLogout();
     navigate('/login');
+  };
+
+  const handleDeleteExperiment = async (id) => {
+    const ok = window.confirm('Delete this experiment? This cannot be undone.');
+    if (!ok) return;
+    try {
+      setDeletingId(id);
+      await axios.delete(`/api/experiments/${id}` , {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      setExperiments((prev) => prev.filter((e) => e.id !== id));
+    } catch (err) {
+      alert(err.response?.data?.error || 'Failed to delete experiment');
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   if (loading) return <div className="loading">Loading dashboard...</div>;
@@ -66,12 +83,23 @@ function FacultyDashboard({ user, onLogout }) {
           {experiments.map((exp) => (
             <div key={exp.id} className="experiment-card">
               <h3>{exp.name}</h3>
-              <p style={{ color: '#666', fontSize: '14px', marginBottom: '10px' }}>
+              <p style={{ color: '#666', fontSize: '14px', marginBottom: '16px' }}>
                 {exp.explanation?.substring(0, 100)}...
               </p>
-              <Link to={`/quiz-builder/${exp.id}`}>
-                <button style={{ width: '100%' }}>Edit Quiz</button>
-              </Link>
+              <div style={{ display: 'grid', gridTemplateColumns: exp.faculty_id === user.id ? '1fr 1fr' : '1fr', gap: '10px' }}>
+                <Link to={`/quiz-builder/${exp.id}`}>
+                  <button style={{ width: '100%' }}>Edit Quiz</button>
+                </Link>
+                {exp.faculty_id === user.id && (
+                  <button
+                    style={{ width: '100%', background: '#e11d48' }}
+                    onClick={() => handleDeleteExperiment(exp.id)}
+                    disabled={deletingId === exp.id}
+                  >
+                    {deletingId === exp.id ? 'Deleting...' : 'Delete'}
+                  </button>
+                )}
+              </div>
             </div>
           ))}
         </div>

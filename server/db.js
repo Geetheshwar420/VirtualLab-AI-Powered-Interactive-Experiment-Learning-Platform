@@ -21,6 +21,17 @@ export function initializeDatabase() {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
 
+    // Add require_password_change column if not exists (SQLite allows ADD COLUMN without IF NOT EXISTS)
+    db.run('ALTER TABLE users ADD COLUMN require_password_change BOOLEAN DEFAULT 0', (err) => {
+      if (err) {
+        const msg = String(err.message || '').toLowerCase();
+        const ignore = msg.includes('duplicate column') || msg.includes('already exists');
+        if (!ignore) {
+          console.error('Error adding users.require_password_change column', { code: err.code, message: err.message });
+        }
+      }
+    });
+
     db.run(`CREATE TABLE IF NOT EXISTS experiments (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
@@ -100,6 +111,18 @@ export function initializeDatabase() {
       uploaded_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (faculty_id) REFERENCES users(id)
     )`);
+
+    // Password reset tokens table
+    db.run(`CREATE TABLE IF NOT EXISTS password_resets (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      token TEXT UNIQUE NOT NULL,
+      expires_at DATETIME NOT NULL,
+      used BOOLEAN DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )`);
+    db.run(`CREATE INDEX IF NOT EXISTS idx_password_resets_user_id ON password_resets(user_id)`);
 
     db.run(`CREATE TABLE IF NOT EXISTS user_profiles (
       id INTEGER PRIMARY KEY AUTOINCREMENT,

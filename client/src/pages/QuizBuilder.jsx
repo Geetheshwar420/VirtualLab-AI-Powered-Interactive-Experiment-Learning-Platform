@@ -6,6 +6,10 @@ function QuizBuilder({ user, onLogout }) {
   const { experiment_id } = useParams();
   const [quizTitle, setQuizTitle] = useState('');
   const [quizId, setQuizId] = useState(null);
+  const [mode, setMode] = useState(null); // 'manual' or 'ai'
+  const [numQuestions, setNumQuestions] = useState(5);
+  const [aiQuestions, setAiQuestions] = useState([]);
+  const [generatingAI, setGeneratingAI] = useState(false);
   const [questionText, setQuestionText] = useState('');
   const [options, setOptions] = useState([
     { text: '', is_correct: false },
@@ -104,6 +108,72 @@ function QuizBuilder({ user, onLogout }) {
     navigate('/login');
   };
 
+  const handleGenerateAI = async () => {
+    if (!quizId) {
+      setError('Missing quiz id');
+      return;
+    }
+    if (numQuestions < 1 || numQuestions > 20) {
+      setError('Enter a number between 1 and 20');
+      return;
+    }
+    setGeneratingAI(true);
+    setError('');
+    try {
+      const response = await axios.post(
+        `/api/quizzes/${quizId}/generate-questions`,
+        { num_questions: numQuestions, experiment_id: parseInt(experiment_id) },
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      );
+      setAiQuestions(response.data.questions);
+      setMode('ai-confirm');
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to generate questions');
+    } finally {
+      setGeneratingAI(false);
+    }
+  };
+
+  const handleConfirmAIQuestions = async () => {
+    setLoading(true);
+    try {
+      const resp = await axios.post(
+        `/api/quizzes/${quizId}/questions/batch`,
+        { questions: aiQuestions },
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      );
+      const created = resp.data?.created ?? aiQuestions.length;
+      setSuccess(`Added ${created} questions!`);
+      setAiQuestions([]);
+      setMode(null);
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to add questions');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRemoveAIQuestion = (idx) => {
+    setAiQuestions(aiQuestions.filter((_, i) => i !== idx));
+  };
+
+  const handleUpdateAIQuestion = (idx, field, value) => {
+    const updated = [...aiQuestions];
+    if (field === 'question') {
+      updated[idx].question = value;
+    } else if (field.startsWith('option-')) {
+      const optionIdx = parseInt(field.split('-')[1]);
+      updated[idx].options[optionIdx].text = value;
+    } else if (field.startsWith('correct-')) {
+      const optionIdx = parseInt(field.split('-')[1]);
+      updated[idx].options = updated[idx].options.map((o, i) => ({
+        ...o,
+        is_correct: i === optionIdx
+      }));
+    }
+    setAiQuestions(updated);
+  };
+
   return (
     <div>
       <div className="header">
@@ -141,7 +211,128 @@ function QuizBuilder({ user, onLogout }) {
           </div>
         ) : (
           <div className="card">
-            <h2>Add Questions</h2>
+            <h2>Add Questions to Quiz</h2>
+            {!mode && (
+              <div style={{ marginBottom: '20px' }}>
+                <p style={{ color: '#666', marginBottom: '15px' }}>Choose how to add questions:</p>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                  <button
+                    type="button"
+                    onClick={() => setMode('manual')}
+                    style={{ background: '#667eea', padding: '15px' }}
+                  >
+                    ✏️ Add Manually
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMode('ai')}
+                    style={{ background: '#764ba2', padding: '15px' }}
+                  >
+                    🤖 Generate with AI
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {mode === 'ai' && (
+              <div style={{ marginBottom: '20px', padding: '15px', background: '#f0f0f0', borderRadius: '6px' }}>
+                <h3>Generate Questions with AI</h3>
+                <div className="form-group">
+                  <label>How many questions do you want? (1-20)</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="20"
+                    value={numQuestions}
+                    onChange={(e) => setNumQuestions(parseInt(e.target.value) || 5)}
+                  />
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                  <button
+                    type="button"
+                    onClick={handleGenerateAI}
+                    disabled={generatingAI}
+                    style={{ background: '#764ba2' }}
+                  >
+                    {generatingAI ? '⏳ Generating...' : '🤖 Generate'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMode(null)}
+                    style={{ background: '#95a5a6' }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {mode === 'ai-confirm' && aiQuestions.length > 0 && (
+              <div style={{ marginBottom: '20px', padding: '15px', background: '#f9f9f9', borderRadius: '6px' }}>
+                <h3>Review & Confirm Questions</h3>
+                <p style={{ color: '#666', fontSize: '14px', marginBottom: '15px' }}>
+                  You can edit, remove, or confirm these questions:
+                </p>
+                {aiQuestions.map((q, qIdx) => (
+                  <div key={qIdx} style={{ marginBottom: '20px', padding: '15px', background: 'white', borderRadius: '6px', border: '1px solid #ddd' }}>
+                    <div className="form-group">
+                      <label>Question {qIdx + 1}</label>
+                      <textarea
+                        value={q.question}
+                        onChange={(e) => handleUpdateAIQuestion(qIdx, 'question', e.target.value)}
+                        rows="2"
+                      />
+                    </div>
+                    {q.options.map((opt, oIdx) => (
+                      <div key={oIdx} style={{ marginBottom: '10px', padding: '10px', background: '#f5f5f5', borderRadius: '4px' }}>
+                        <input
+                          type="text"
+                          value={opt.text}
+                          onChange={(e) => handleUpdateAIQuestion(qIdx, `option-${oIdx}`, e.target.value)}
+                          placeholder={`Option ${oIdx + 1}`}
+                          style={{ width: '100%', marginBottom: '8px' }}
+                        />
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <input
+                            type="radio"
+                            name={`correct-${qIdx}`}
+                            checked={opt.is_correct}
+                            onChange={() => handleUpdateAIQuestion(qIdx, `correct-${oIdx}`, true)}
+                          />
+                          Correct answer
+                        </label>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveAIQuestion(qIdx)}
+                      style={{ width: '100%', background: '#e11d48', marginTop: '10px' }}
+                    >
+                      Remove Question
+                    </button>
+                  </div>
+                ))}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '15px' }}>
+                  <button
+                    type="button"
+                    onClick={handleConfirmAIQuestions}
+                    disabled={loading || aiQuestions.length === 0}
+                    style={{ background: '#27ae60' }}
+                  >
+                    {loading ? 'Adding...' : '✓ Confirm & Add'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setMode('ai'); setAiQuestions([]); }}
+                    style={{ background: '#95a5a6' }}
+                  >
+                    Back
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {mode === 'manual' && (
             <form onSubmit={handleAddQuestion}>
               <div className="form-group">
                 <label>Question</label>
@@ -204,13 +395,16 @@ function QuizBuilder({ user, onLogout }) {
                 {loading ? 'Adding...' : 'Add Question'}
               </button>
             </form>
+            )}
 
-            <button
-              onClick={() => navigate('/dashboard')}
-              style={{ width: '100%', marginTop: '15px', background: '#27ae60' }}
-            >
-              Done - Back to Dashboard
-            </button>
+            {quizId && (
+              <button
+                onClick={() => navigate('/dashboard')}
+                style={{ width: '100%', marginTop: '15px', background: '#27ae60' }}
+              >
+                Done - Back to Dashboard
+              </button>
+            )}
           </div>
         )}
       </div>

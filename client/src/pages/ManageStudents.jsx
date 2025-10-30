@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+  import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
@@ -6,8 +6,7 @@ function ManageStudents({ user, onLogout }) {
   const [students, setStudents] = useState([]);
   const [newStudent, setNewStudent] = useState({
     name: '',
-    email: '',
-    password: ''
+    email: ''
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -35,22 +34,22 @@ function ManageStudents({ user, onLogout }) {
     e.preventDefault();
     setError('');
     setSuccess('');
+    // No invite token stored/displayed on client
 
-    if (!newStudent.name || !newStudent.email || !newStudent.password) {
-      setError('All fields are required');
+    if (!newStudent.name || !newStudent.email) {
+      setError('Name and email are required');
       return;
     }
 
     try {
-      await axios.post('/api/auth/signup', {
-        name: newStudent.name,
-        email: newStudent.email,
-        password: newStudent.password,
-        role: 'student'
-      });
+      await axios.post(
+        '/api/students',
+        { name: newStudent.name, email: newStudent.email },
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      );
 
-      setSuccess('Student added successfully!');
-      setNewStudent({ name: '', email: '', password: '' });
+      setSuccess('Student invited successfully. The password setup link will be sent via email.');
+      setNewStudent({ name: '', email: '' });
       setTimeout(() => {
         fetchStudents();
         setSuccess('');
@@ -87,6 +86,7 @@ function ManageStudents({ user, onLogout }) {
             <h2>➕ Add New Student</h2>
             {error && <div className="error">{error}</div>}
             {success && <div className="success">{success}</div>}
+            {/* No invite token rendered in UI for security reasons */}
 
             <form onSubmit={handleAddStudent}>
               <div className="form-group">
@@ -111,16 +111,6 @@ function ManageStudents({ user, onLogout }) {
                 />
               </div>
 
-              <div className="form-group">
-                <label>Password</label>
-                <input
-                  type="password"
-                  value={newStudent.password}
-                  onChange={(e) => setNewStudent({ ...newStudent, password: e.target.value })}
-                  placeholder="Enter a strong password"
-                  required
-                />
-              </div>
 
               <button type="submit" style={{ width: '100%' }}>
                 Add Student

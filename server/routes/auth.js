@@ -1,6 +1,7 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
-import { runAsync, getAsync } from '../db.js';
+import crypto from 'crypto';
+import { runAsync, getAsync, allAsync } from '../db.js';
 import { generateToken, verifyToken } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -64,6 +65,42 @@ router.post('/login', async (req, res) => {
   } catch (err) {
     console.error('Login error:', err);
     res.status(500).json({ error: err.message });
+  }
+});
+
+// Reset password using a one-time token
+router.post('/reset-password', async (req, res) => {
+  try {
+    const { token, new_password } = req.body;
+    if (!token || typeof token !== 'string' || !new_password || typeof new_password !== 'string' || new_password.length < 8) {
+      return res.status(400).json({ error: 'Invalid token or password too short' });
+    }
+
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+
+    const row = await getAsync(
+      'SELECT id, user_id, token, expires_at, used FROM password_resets WHERE token = ? AND used = 0 AND datetime(expires_at) > datetime("now")',
+      [tokenHash]
+    );
+
+    if (!row) {
+      return res.status(400).json({ error: 'Invalid or expired token' });
+    }
+
+    // Timing-safe compare as an additional guard
+    const provided = Buffer.from(tokenHash, 'hex');
+    const stored = Buffer.from(row.token, 'hex');
+    if (!(stored.length === provided.length && crypto.timingSafeEqual(stored, provided))) {
+      return res.status(400).json({ error: 'Invalid or expired token' });
+    }
+
+    const hashed = await bcrypt.hash(new_password, 10);
+    await runAsync('UPDATE users SET password = ?, require_password_change = 0 WHERE id = ?', [hashed, row.user_id]);
+    await runAsync('UPDATE password_resets SET used = 1 WHERE id = ?', [row.id]);
+
+    return res.json({ message: 'Password updated' });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
   }
 });
 

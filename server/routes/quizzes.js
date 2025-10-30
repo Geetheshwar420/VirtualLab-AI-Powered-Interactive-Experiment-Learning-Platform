@@ -1,6 +1,10 @@
 import express from 'express';
+import axios from 'axios';
+import dotenv from 'dotenv';
 import { verifyToken, requireRole } from '../middleware/auth.js';
 import { runAsync, getAsync, allAsync } from '../db.js';
+
+dotenv.config();
 
 const router = express.Router();
 
@@ -23,6 +27,102 @@ router.post('/', verifyToken, requireRole('faculty'), async (req, res) => {
   }
 });
 
+// Batch create questions atomically
+router.post('/:id/questions/batch', verifyToken, requireRole('faculty'), async (req, res) => {
+  try {
+    const { questions } = req.body;
+    if (!Array.isArray(questions) || questions.length === 0) {
+      return res.status(400).json({ error: 'questions must be a non-empty array' });
+    }
+
+    // Validate quiz existence and ownership
+    const quizId = parseInt(req.params.id, 10);
+    if (!quizId || Number.isNaN(quizId)) {
+      return res.status(400).json({ error: 'Invalid quiz id' });
+    }
+    const quiz = await getAsync(
+      `SELECT q.id, q.experiment_id, e.faculty_id
+       FROM quizzes q
+       JOIN experiments e ON q.experiment_id = e.id
+       WHERE q.id = ?`,
+      [quizId]
+    );
+    if (!quiz) {
+      return res.status(404).json({ error: 'Quiz not found' });
+    }
+    if (quiz.faculty_id !== req.user.id) {
+      return res.status(403).json({ error: 'Not authorized to modify this quiz' });
+    }
+
+    // Validate shape first
+    const invalid = [];
+    const sanitized = [];
+    questions.forEach((q, idx) => {
+      const errors = [];
+      if (!q || typeof q !== 'object' || Array.isArray(q)) errors.push('question must be an object');
+      const questionText = q?.question || q?.question_text;
+      if (typeof questionText !== 'string' || !questionText.trim()) errors.push('question text must be a non-empty string');
+      const opts = q?.options;
+      if (!Array.isArray(opts) || opts.length < 2) errors.push('options must be an array with at least 2 items');
+
+      let correctCount = 0;
+      const sanitizedOptions = [];
+      if (Array.isArray(opts)) {
+        opts.forEach((opt, oIdx) => {
+          if (!opt || typeof opt !== 'object' || Array.isArray(opt)) {
+            errors.push(`options[${oIdx}] must be an object`);
+            return;
+          }
+          const text = opt?.text;
+          const isCorrect = opt?.is_correct;
+          if (typeof text !== 'string' || !text.trim()) errors.push(`options[${oIdx}].text must be a non-empty string`);
+          if (typeof isCorrect !== 'boolean') errors.push(`options[${oIdx}].is_correct must be a boolean`);
+          if (isCorrect === true) correctCount += 1;
+          sanitizedOptions.push({ text: typeof text === 'string' ? text.trim() : '', is_correct: Boolean(isCorrect) });
+        });
+      }
+      if (correctCount !== 1) errors.push('exactly one option must have is_correct=true');
+
+      if (errors.length > 0) invalid.push({ index: idx, errors });
+      else sanitized.push({ question_text: questionText.trim(), options: sanitizedOptions });
+    });
+
+    if (invalid.length > 0) {
+      return res.status(400).json({ error: 'One or more questions invalid', invalid });
+    }
+
+    // Atomic insert via transaction
+    await runAsync('BEGIN');
+    try {
+      for (const q of sanitized) {
+        const questionResult = await runAsync(
+          'INSERT INTO questions (quiz_id, question_text) VALUES (?, ?)',
+          [req.params.id, q.question_text]
+        );
+        for (const opt of q.options) {
+          await runAsync(
+            'INSERT INTO options (question_id, option_text, is_correct) VALUES (?, ?, ?)',
+            [questionResult.id, opt.text, opt.is_correct ? 1 : 0]
+          );
+        }
+      }
+      await runAsync('COMMIT');
+      return res.status(201).json({ created: sanitized.length });
+    } catch (txErr) {
+      await runAsync('ROLLBACK');
+      console.error('Failed to create questions batch', {
+        quizId: req.params.id,
+        questionsCount: Array.isArray(questions) ? questions.length : undefined,
+        error: txErr && txErr.message,
+        stack: txErr && txErr.stack
+      });
+      return res.status(500).json({ error: 'Failed to create questions batch' });
+    }
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
 router.post('/:id/questions', verifyToken, requireRole('faculty'), async (req, res) => {
   try {
     const { question_text, options } = req.body;
@@ -34,6 +134,25 @@ router.post('/:id/questions', verifyToken, requireRole('faculty'), async (req, r
     const correctCount = options.filter(o => o.is_correct).length;
     if (correctCount !== 1) {
       return res.status(400).json({ error: 'Exactly one option must be marked as correct' });
+    }
+
+    // Validate quiz existence and ownership
+    const quizId = parseInt(req.params.id, 10);
+    if (!quizId || Number.isNaN(quizId)) {
+      return res.status(400).json({ error: 'Invalid quiz id' });
+    }
+    const quiz = await getAsync(
+      `SELECT q.id, q.experiment_id, e.faculty_id
+       FROM quizzes q
+       JOIN experiments e ON q.experiment_id = e.id
+       WHERE q.id = ?`,
+      [quizId]
+    );
+    if (!quiz) {
+      return res.status(404).json({ error: 'Quiz not found' });
+    }
+    if (quiz.faculty_id !== req.user.id) {
+      return res.status(403).json({ error: 'Not authorized to modify this quiz' });
     }
 
     const questionResult = await runAsync(
@@ -142,6 +261,167 @@ router.get('/experiment/:experiment_id', async (req, res) => {
     res.json(quizzes);
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+// Generate quiz questions using AI
+router.post('/:id/generate-questions', verifyToken, requireRole('faculty'), async (req, res) => {
+  try {
+    const { num_questions, experiment_id } = req.body;
+
+    if (!num_questions || num_questions < 1 || num_questions > 20) {
+      return res.status(400).json({ error: 'num_questions must be between 1 and 20' });
+    }
+
+    // Validate experiment_id before performing any DB operations
+    const expId = Number.isInteger(experiment_id) ? experiment_id : parseInt(experiment_id, 10);
+    if (!expId || Number.isNaN(expId)) {
+      return res.status(400).json({ error: 'experiment_id is required and must be a valid numeric id' });
+    }
+
+    const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+    if (!OPENAI_API_KEY) {
+      return res.status(500).json({ error: 'AI service not configured' });
+    }
+
+    // Get experiment details for context
+    const experiment = await getAsync(
+      'SELECT name, explanation FROM experiments WHERE id = ?',
+      [expId]
+    );
+
+    if (!experiment) {
+      return res.status(404).json({ error: 'Experiment not found' });
+    }
+
+    const prompt = `Generate exactly ${num_questions} multiple choice quiz questions about the following experiment:
+
+Experiment: ${experiment.name}
+Description: ${experiment.explanation}
+
+Return the questions as a JSON array with this exact structure:
+[
+  {
+    "question": "Question text here?",
+    "options": [
+      { "text": "Option 1", "is_correct": false },
+      { "text": "Option 2", "is_correct": true },
+      { "text": "Option 3", "is_correct": false },
+      { "text": "Option 4", "is_correct": false }
+    ]
+  }
+]
+
+Requirements:
+- Each question must have exactly 4 options
+- Exactly one option must be marked as is_correct: true
+- Questions should test understanding of the experiment
+- Return ONLY valid JSON, no other text`;
+
+    const response = await axios.post(
+      'https://api.openai.com/v1/chat/completions',
+      {
+        model: 'gpt-3.5-turbo',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are an expert educator. Generate high-quality multiple choice questions.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        temperature: 0.7,
+        max_tokens: 2000
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${OPENAI_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        timeout: 10000
+      }
+    );
+
+    const aiResponse = response.data.choices[0].message.content;
+    let questions;
+
+    try {
+      questions = JSON.parse(aiResponse);
+    } catch (parseErr) {
+      return res.status(500).json({ error: 'Failed to parse AI response' });
+    }
+
+    if (!Array.isArray(questions) || questions.length === 0) {
+      return res.status(500).json({ error: 'Invalid AI response format: expected a non-empty JSON array' });
+    }
+
+    // Strictly validate and sanitize each question
+    const invalid = [];
+    const sanitized = [];
+
+    questions.forEach((q, idx) => {
+      const errors = [];
+
+      if (!q || typeof q !== 'object' || Array.isArray(q)) {
+        errors.push('question must be an object');
+      }
+
+      const questionText = q?.question;
+      if (typeof questionText !== 'string' || !questionText.trim()) {
+        errors.push('question text must be a non-empty string');
+      }
+
+      const opts = q?.options;
+      if (!Array.isArray(opts) || opts.length !== 4) {
+        errors.push('options must be an array of exactly 4 items');
+      }
+
+      let correctCount = 0;
+      const sanitizedOptions = [];
+      if (Array.isArray(opts)) {
+        opts.forEach((opt, oIdx) => {
+          if (!opt || typeof opt !== 'object' || Array.isArray(opt)) {
+            errors.push(`options[${oIdx}] must be an object`);
+            return;
+          }
+          const text = opt?.text;
+          const isCorrect = opt?.is_correct;
+          if (typeof text !== 'string' || !text.trim()) {
+            errors.push(`options[${oIdx}].text must be a non-empty string`);
+          }
+          if (typeof isCorrect !== 'boolean') {
+            errors.push(`options[${oIdx}].is_correct must be a boolean`);
+          }
+          if (isCorrect === true) correctCount += 1;
+
+          sanitizedOptions.push({
+            text: typeof text === 'string' ? text.trim() : '',
+            is_correct: Boolean(isCorrect)
+          });
+        });
+      }
+
+      if (correctCount !== 1) {
+        errors.push('exactly one option must have is_correct=true');
+      }
+
+      if (errors.length > 0) {
+        invalid.push({ index: idx, errors });
+      } else {
+        sanitized.push({ question: questionText.trim(), options: sanitizedOptions });
+      }
+    });
+
+    if (invalid.length > 0) {
+      return res.status(400).json({ error: 'One or more generated questions are invalid', invalid });
+    }
+
+    res.json({ questions: sanitized });
+  } catch (err) {
+    console.error('AI quiz generation error:', err.message);
+    res.status(500).json({ error: 'Error generating questions' });
   }
 });
 

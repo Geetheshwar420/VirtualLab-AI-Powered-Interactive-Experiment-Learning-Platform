@@ -1,5 +1,6 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import { verifyToken, requireRole } from '../middleware/auth.js';
 import { runAsync, getAsync, allAsync } from '../db.js';
 
@@ -18,13 +19,14 @@ router.post('/students', verifyToken, requireRole('faculty'), async (req, res) =
     let failCount = 0;
     const errors = [];
 
+    const invites = [];
     for (const student of students) {
       try {
         const { name, email, password } = student;
 
-        if (!name || !email || !password) {
+        if (!name || !email) {
           failCount++;
-          errors.push(`Row skipped: Missing name, email, or password`);
+          errors.push(`Row skipped: Missing name or email`);
           continue;
         }
 
@@ -36,11 +38,28 @@ router.post('/students', verifyToken, requireRole('faculty'), async (req, res) =
           continue;
         }
 
-        const hashedPassword = await bcrypt.hash(password, 10);
-        await runAsync(
-          'INSERT INTO users (email, password, name, role) VALUES (?, ?, ?, ?)',
-          [email, hashedPassword, name, 'student']
+        // Generate a secure random temporary password
+        const tempPassword = password && String(password).trim().length >= 8
+          ? String(password).trim()
+          : crypto.randomBytes(16).toString('hex');
+        const hashedPassword = await bcrypt.hash(tempPassword, 10);
+
+        const userResult = await runAsync(
+          'INSERT INTO users (email, password, name, role, require_password_change) VALUES (?, ?, ?, ?, ?)',
+          [email, hashedPassword, name, 'student', 1]
         );
+
+        // Create a reset token (valid 48h); store only the hash in DB
+        const rawToken = crypto.randomBytes(32).toString('hex');
+        const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+        const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
+        await runAsync(
+          'INSERT INTO password_resets (user_id, token, expires_at) VALUES (?, ?, ?)',
+          [userResult.id, tokenHash, expiresAt]
+        );
+
+        // Do not return the raw token in API responses
+        invites.push({ email, user_id: userResult.id, expires_at: expiresAt });
 
         successCount++;
       } catch (err) {
@@ -59,7 +78,8 @@ router.post('/students', verifyToken, requireRole('faculty'), async (req, res) =
       total: students.length,
       successful: successCount,
       failed: failCount,
-      errors: errors.slice(0, 10) // Return first 10 errors
+      errors: errors.slice(0, 10), // Return first 10 errors
+      invites
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
