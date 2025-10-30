@@ -16,7 +16,9 @@ function StudentProfile({ user, onLogout }) {
 
   useEffect(() => {
     fetchProfile();
-    fetchProgress();
+    if (user?.role === 'student') {
+      fetchProgress();
+    }
   }, []);
 
   const fetchProfile = async () => {
@@ -115,7 +117,7 @@ function StudentProfile({ user, onLogout }) {
       <div className="header">
         <div>
           <h1>👤 My Profile</h1>
-          <p>Manage your account and view progress</p>
+          <p>Manage your account{user?.role === 'student' ? ' and view progress' : ''}</p>
         </div>
         <div className="nav-buttons">
           <button onClick={() => navigate('/dashboard')}>Back to Dashboard</button>
@@ -251,7 +253,8 @@ function StudentProfile({ user, onLogout }) {
           </div>
 
           {/* Learning Progress */}
-          <div className="card">
+          {user?.role === 'student' && (
+            <div className="card">
             <h2>📊 Learning Progress</h2>
             
             <div style={{
@@ -305,7 +308,8 @@ function StudentProfile({ user, onLogout }) {
                 <p>Go to an experiment and take a quiz to see your progress!</p>
               </div>
             )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

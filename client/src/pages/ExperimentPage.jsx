@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import ChatWidget from '../components/ChatWidget';
+import { toast } from 'react-hot-toast';
 
 function ExperimentPage({ user, onLogout }) {
   const { id } = useParams();
@@ -26,6 +27,7 @@ function ExperimentPage({ user, onLogout }) {
       setLoading(false);
     } catch (err) {
       console.error('Error fetching experiment:', err);
+      toast.error('Failed to load experiment');
       setLoading(false);
     }
   };
@@ -41,7 +43,20 @@ function ExperimentPage({ user, onLogout }) {
     navigate('/login');
   };
 
-  if (loading) return <div className="loading">Loading experiment...</div>;
+  if (loading) return (
+    <div className="container">
+      <div className="animate-pulse space-y-6">
+        <div className="card">
+          <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
+          <div className="h-64 bg-gray-200 rounded"></div>
+        </div>
+        <div className="card">
+          <div className="h-6 bg-gray-200 rounded w-1/4 mb-4"></div>
+          <div className="h-24 bg-gray-200 rounded"></div>
+        </div>
+      </div>
+    </div>
+  );
   if (!experiment) return <div className="loading">Experiment not found</div>;
 
   const videoId = extractVideoId(experiment.youtube_url);

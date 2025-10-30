@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { toast } from 'react-hot-toast';
 
 function AddExperiment({ user, onLogout }) {
   const [name, setName] = useState('');
@@ -9,6 +10,8 @@ function AddExperiment({ user, onLogout }) {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [explanation, setExplanation] = useState('');
+  const errorRef = useRef(null);
+  const successRef = useRef(null);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -25,11 +28,15 @@ function AddExperiment({ user, onLogout }) {
       );
 
       setSuccess('Experiment added successfully! Redirecting...');
+      toast.success('Experiment added');
+      if (successRef?.current) successRef.current.focus();
       setTimeout(() => {
         navigate(`/quiz-builder/${response.data.id}`);
       }, 1500);
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to add experiment');
+      toast.error(err.response?.data?.error || 'Failed to add experiment');
+      if (errorRef?.current) errorRef.current.focus();
     } finally {
       setLoading(false);
     }
@@ -54,8 +61,12 @@ function AddExperiment({ user, onLogout }) {
 
       <div className="container" style={{ maxWidth: '600px' }}>
         <div className="card">
-          {error && <div className="error">{error}</div>}
-          {success && <div className="success">{success}</div>}
+          {error && (
+            <div className="error" role="alert" aria-live="assertive" ref={errorRef} tabIndex="-1">{error}</div>
+          )}
+          {success && (
+            <div className="success" role="status" aria-live="polite" ref={successRef} tabIndex="-1">{success}</div>
+          )}
 
           <form onSubmit={handleSubmit}>
             <div className="form-group">
@@ -93,7 +104,7 @@ function AddExperiment({ user, onLogout }) {
               </p>
             </div>
 
-            <button type="submit" disabled={loading} style={{ width: '100%' }}>
+            <button type="submit" disabled={loading} aria-busy={loading} style={{ width: '100%' }}>
               {loading ? 'Processing...' : 'Add Experiment'}
             </button>
           </form>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
+import { toast } from 'react-hot-toast';
 
 function FacultyDashboard({ user, onLogout }) {
   const [experiments, setExperiments] = useState([]);
@@ -26,6 +27,7 @@ function FacultyDashboard({ user, onLogout }) {
       setLoading(false);
     } catch (err) {
       console.error('Error fetching data:', err);
+      toast.error('Failed to load dashboard data');
       setLoading(false);
     }
   };
@@ -44,14 +46,33 @@ function FacultyDashboard({ user, onLogout }) {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       setExperiments((prev) => prev.filter((e) => e.id !== id));
+      toast.success('Experiment deleted');
     } catch (err) {
-      alert(err.response?.data?.error || 'Failed to delete experiment');
+      toast.error(err.response?.data?.error || 'Failed to delete experiment');
     } finally {
       setDeletingId(null);
     }
   };
 
-  if (loading) return <div className="loading">Loading dashboard...</div>;
+  if (loading) return (
+    <div className="container">
+      <div className="animate-pulse space-y-6">
+        <div className="card">
+          <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
+          <div className="grid" style={{ gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '20px' }}>
+            <div className="h-32 bg-gray-200 rounded"></div>
+            <div className="h-32 bg-gray-200 rounded"></div>
+            <div className="h-32 bg-gray-200 rounded"></div>
+          </div>
+        </div>
+        <div className="card">
+          <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
+          <div className="h-10 bg-gray-200 rounded mb-2"></div>
+          <div className="h-10 bg-gray-200 rounded"></div>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div>
@@ -107,11 +128,12 @@ function FacultyDashboard({ user, onLogout }) {
         <h2 style={{ color: 'white', marginBottom: '20px', marginTop: '40px' }}>Student Progress</h2>
         <div className="card">
           <table>
+            <caption className="sr-only">Students and actions</caption>
             <thead>
               <tr>
-                <th>Student Name</th>
-                <th>Email</th>
-                <th>Action</th>
+                <th scope="col">Student Name</th>
+                <th scope="col">Email</th>
+                <th scope="col">Action</th>
               </tr>
             </thead>
             <tbody>

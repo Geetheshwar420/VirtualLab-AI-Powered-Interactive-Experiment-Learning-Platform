@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { toast } from 'react-hot-toast';
 
 function QuizBuilder({ user, onLogout }) {
   const { experiment_id } = useParams();
@@ -18,16 +19,21 @@ function QuizBuilder({ user, onLogout }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [creating, setCreating] = useState(false);
+  const errorRef = useRef(null);
+  const successRef = useRef(null);
   const navigate = useNavigate();
 
   const handleCreateQuiz = async (e) => {
     e.preventDefault();
     if (!quizTitle) {
       setError('Quiz title is required');
+      if (errorRef?.current) errorRef.current.focus();
       return;
     }
 
     try {
+      setCreating(true);
       const response = await axios.post(
         '/api/quizzes',
         { experiment_id: parseInt(experiment_id), title: quizTitle },
@@ -35,9 +41,15 @@ function QuizBuilder({ user, onLogout }) {
       );
       setQuizId(response.data.id);
       setSuccess('Quiz created! Now add questions.');
+      toast.success('Quiz created');
+      if (successRef?.current) successRef.current.focus();
       setQuizTitle('');
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to create quiz');
+      toast.error(err.response?.data?.error || 'Failed to create quiz');
+      if (errorRef?.current) errorRef.current.focus();
+    } finally {
+      setCreating(false);
     }
   };
 
@@ -45,17 +57,20 @@ function QuizBuilder({ user, onLogout }) {
     e.preventDefault();
     if (!quizId) {
       setError('Create a quiz first');
+      if (errorRef?.current) errorRef.current.focus();
       return;
     }
 
     const correctCount = options.filter(o => o.is_correct).length;
     if (correctCount !== 1) {
       setError('Exactly one option must be marked as correct');
+      if (errorRef?.current) errorRef.current.focus();
       return;
     }
 
     if (options.some(o => !o.text)) {
       setError('All options must have text');
+      if (errorRef?.current) errorRef.current.focus();
       return;
     }
 
@@ -71,6 +86,8 @@ function QuizBuilder({ user, onLogout }) {
       );
 
       setSuccess('Question added successfully!');
+      toast.success('Question added');
+      if (successRef?.current) successRef.current.focus();
       setQuestionText('');
       setOptions([
         { text: '', is_correct: false },
@@ -78,6 +95,8 @@ function QuizBuilder({ user, onLogout }) {
       ]);
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to add question');
+      toast.error(err.response?.data?.error || 'Failed to add question');
+      if (errorRef?.current) errorRef.current.focus();
     } finally {
       setLoading(false);
     }
@@ -111,10 +130,12 @@ function QuizBuilder({ user, onLogout }) {
   const handleGenerateAI = async () => {
     if (!quizId) {
       setError('Missing quiz id');
+      if (errorRef?.current) errorRef.current.focus();
       return;
     }
     if (numQuestions < 1 || numQuestions > 20) {
       setError('Enter a number between 1 and 20');
+      if (errorRef?.current) errorRef.current.focus();
       return;
     }
     setGeneratingAI(true);
@@ -127,8 +148,11 @@ function QuizBuilder({ user, onLogout }) {
       );
       setAiQuestions(response.data.questions);
       setMode('ai-confirm');
+      toast.success(`Generated ${response.data.questions?.length ?? numQuestions} questions`);
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to generate questions');
+      toast.error(err.response?.data?.error || 'Failed to generate questions');
+      if (errorRef?.current) errorRef.current.focus();
     } finally {
       setGeneratingAI(false);
     }
@@ -144,10 +168,14 @@ function QuizBuilder({ user, onLogout }) {
       );
       const created = resp.data?.created ?? aiQuestions.length;
       setSuccess(`Added ${created} questions!`);
+      toast.success(`Added ${created} questions`);
+      if (successRef?.current) successRef.current.focus();
       setAiQuestions([]);
       setMode(null);
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to add questions');
+      toast.error(err.response?.data?.error || 'Failed to add questions');
+      if (errorRef?.current) errorRef.current.focus();
     } finally {
       setLoading(false);
     }
@@ -187,25 +215,46 @@ function QuizBuilder({ user, onLogout }) {
       </div>
 
       <div className="container" style={{ maxWidth: '600px' }}>
-        {error && <div className="error">{error}</div>}
-        {success && <div className="success">{success}</div>}
+        {error && (
+          <div
+            className="error"
+            role="alert"
+            aria-live="assertive"
+            ref={errorRef}
+            tabIndex="-1"
+          >
+            {error}
+          </div>
+        )}
+        {success && (
+          <div
+            className="success"
+            role="status"
+            aria-live="polite"
+            ref={successRef}
+            tabIndex="-1"
+          >
+            {success}
+          </div>
+        )}
 
         {!quizId ? (
           <div className="card">
             <h2>Create Quiz</h2>
             <form onSubmit={handleCreateQuiz}>
               <div className="form-group">
-                <label>Quiz Title</label>
+                <label htmlFor="quiz-title">Quiz Title</label>
                 <input
                   type="text"
+                  id="quiz-title"
                   value={quizTitle}
                   onChange={(e) => setQuizTitle(e.target.value)}
                   placeholder="e.g., Titration Basics"
                   required
                 />
               </div>
-              <button type="submit" style={{ width: '100%' }}>
-                Create Quiz
+              <button type="submit" style={{ width: '100%' }} disabled={creating} aria-busy={creating}>
+                {creating ? 'Creating...' : 'Create Quiz'}
               </button>
             </form>
           </div>
@@ -238,11 +287,12 @@ function QuizBuilder({ user, onLogout }) {
               <div style={{ marginBottom: '20px', padding: '15px', background: '#f0f0f0', borderRadius: '6px' }}>
                 <h3>Generate Questions with AI</h3>
                 <div className="form-group">
-                  <label>How many questions do you want? (1-20)</label>
+                  <label htmlFor="num-questions">How many questions do you want? (1-20)</label>
                   <input
                     type="number"
                     min="1"
                     max="20"
+                    id="num-questions"
                     value={numQuestions}
                     onChange={(e) => setNumQuestions(parseInt(e.target.value) || 5)}
                   />
@@ -252,6 +302,7 @@ function QuizBuilder({ user, onLogout }) {
                     type="button"
                     onClick={handleGenerateAI}
                     disabled={generatingAI}
+                    aria-busy={generatingAI}
                     style={{ background: '#764ba2' }}
                   >
                     {generatingAI ? '⏳ Generating...' : '🤖 Generate'}
@@ -317,6 +368,7 @@ function QuizBuilder({ user, onLogout }) {
                     type="button"
                     onClick={handleConfirmAIQuestions}
                     disabled={loading || aiQuestions.length === 0}
+                    aria-busy={loading}
                     style={{ background: '#27ae60' }}
                   >
                     {loading ? 'Adding...' : '✓ Confirm & Add'}
@@ -391,7 +443,7 @@ function QuizBuilder({ user, onLogout }) {
                 + Add Option
               </button>
 
-              <button type="submit" disabled={loading} style={{ width: '100%' }}>
+              <button type="submit" disabled={loading} aria-busy={loading} style={{ width: '100%' }}>
                 {loading ? 'Adding...' : 'Add Question'}
               </button>
             </form>

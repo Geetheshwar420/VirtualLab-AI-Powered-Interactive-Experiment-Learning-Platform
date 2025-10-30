@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import ChatWidget from '../components/ChatWidget';
+import { toast } from 'react-hot-toast';
 
 function StudentDashboard({ user, onLogout }) {
   const [experiments, setExperiments] = useState([]);
@@ -19,6 +20,7 @@ function StudentDashboard({ user, onLogout }) {
       setLoading(false);
     } catch (err) {
       console.error('Error fetching experiments:', err);
+      toast.error('Failed to load experiments');
       setLoading(false);
     }
   };
@@ -28,7 +30,20 @@ function StudentDashboard({ user, onLogout }) {
     navigate('/login');
   };
 
-  if (loading) return <div className="loading">Loading experiments...</div>;
+  if (loading) return (
+    <div className="container">
+      <div className="animate-pulse">
+        <div className="card">
+          <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
+          <div className="grid" style={{ gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '20px' }}>
+            <div className="h-32 bg-gray-200 rounded"></div>
+            <div className="h-32 bg-gray-200 rounded"></div>
+            <div className="h-32 bg-gray-200 rounded"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div>
