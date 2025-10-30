@@ -1,0 +1,27 @@
+{
+  "name": "experiment-learning-platform",
+  "version": "1.0.0",
+  "description": "Interactive Experiment Learning Platform",
+  "type": "module",
+  "main": "server/index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "node server/index.js",
+    "client": "cd client && npm run dev",
+    "build": "cd client && npm run build",
+    "preview": "cd client && npm run preview",
+    "seed": "node server/seed.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "sqlite3": "^5.1.6",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^8.5.1",
+    "dotenv": "^16.0.3",
+    "cors": "^2.8.5",
+    "axios": "^1.4.0"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

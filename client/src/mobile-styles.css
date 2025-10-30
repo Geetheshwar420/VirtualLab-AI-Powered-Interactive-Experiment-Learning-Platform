@@ -1,0 +1,481 @@
+/* Mobile-Friendly Global Styles */
+
+/* Ensure proper viewport */
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+/* Header responsive */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  background: white;
+  color: inherit;
+  flex-wrap: wrap;
+  gap: 12px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 100;
+  width: 100%;
+}
+
+.header > div:first-child {
+  flex: 1;
+  min-width: 200px;
+}
+
+.header h1 {
+  margin: 0;
+  padding: 0;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: #667eea;
+}
+
+.header p {
+  margin: 6px 0 0 0;
+  padding: 0;
+  font-size: 14px;
+  font-weight: 400;
+  color: #555;
+}
+
+/* Navigation buttons responsive */
+.nav-buttons {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.nav-buttons a,
+.nav-link {
+  text-decoration: none;
+  display: inline-block;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.nav-buttons button {
+  min-width: 120px;
+  background: #667eea !important;
+  color: #fff !important;
+  border: none !important;
+  padding: 10px 16px !important;
+  border-radius: 6px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+}
+
+
+
+.nav-buttons button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Generic headings inside container should be dark for readability on white cards */
+.container h2,
+.container h3,
+.container p {
+  color: #333;
+}
+
+/* Container responsive */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 10px;
+  }
+}
+
+/* Cards responsive */
+.card {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.card h2 {
+  margin-top: 0;
+  font-size: clamp(18px, 5vw, 24px);
+  color: #333;
+}
+
+.card h3 {
+  font-size: clamp(16px, 4vw, 20px);
+  color: #333;
+}
+
+.card p {
+  font-size: clamp(14px, 4vw, 16px);
+  line-height: 1.6;
+  color: #666;
+}
+
+@media (max-width: 768px) {
+  .card {
+    padding: 15px;
+    margin-bottom: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .card {
+    padding: 12px;
+    margin-bottom: 12px;
+  }
+}
+
+/* Forms responsive */
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  font-size: clamp(13px, 3vw, 14px);
+  color: #333;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: clamp(13px, 3vw, 14px);
+  font-family: inherit;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+@media (max-width: 480px) {
+  .form-group input,
+  .form-group textarea,
+  .form-group select {
+    padding: 10px;
+  }
+}
+
+/* Buttons responsive */
+button {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-size: clamp(13px, 3vw, 14px);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-height: 44px;
+  min-width: 44px;
+}
+
+button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 480px) {
+  button {
+    padding: 10px 15px;
+    min-height: 40px;
+  }
+}
+
+/* Grid responsive */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+/* Quiz container responsive */
+.quiz-container {
+  padding: 20px;
+}
+
+.question {
+  margin-bottom: 25px;
+  padding: 15px;
+  background: #f9f9f9;
+  border-radius: 8px;
+  border: 1px solid #eee;
+}
+
+.question h3 {
+  margin-top: 0;
+  font-size: clamp(15px, 4vw, 17px);
+  margin-bottom: 15px;
+}
+
+.option {
+  margin-bottom: 10px;
+  padding: 12px;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.option:hover {
+  border-color: #667eea;
+  background: #f5f7ff;
+}
+
+.option input {
+  margin-right: 10px;
+  cursor: pointer;
+  min-width: 18px;
+  min-height: 18px;
+}
+
+.option label {
+  cursor: pointer;
+  font-size: clamp(13px, 3vw, 14px);
+  display: inline;
+}
+
+@media (max-width: 480px) {
+  .quiz-container {
+    padding: 15px;
+  }
+
+  .question {
+    margin-bottom: 20px;
+    padding: 12px;
+  }
+
+  .option {
+    padding: 10px;
+    margin-bottom: 8px;
+  }
+}
+
+/* Loading state */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  font-size: clamp(14px, 4vw, 16px);
+  color: #666;
+}
+
+/* Error and success messages */
+.error {
+  background: #ffebee;
+  color: #c33;
+  padding: 15px;
+  border-radius: 6px;
+  margin-bottom: 15px;
+  font-size: clamp(13px, 3vw, 14px);
+  border-left: 4px solid #c33;
+}
+
+.success {
+  background: #e8f5e9;
+  color: #27ae60;
+  padding: 15px;
+  border-radius: 6px;
+  margin-bottom: 15px;
+  font-size: clamp(13px, 3vw, 14px);
+  border-left: 4px solid #27ae60;
+}
+
+/* Score display responsive */
+.score-display {
+  text-align: center;
+  padding: 30px 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.score-display h2 {
+  margin-top: 0;
+  font-size: clamp(18px, 5vw, 24px);
+}
+
+.score-display div {
+  font-size: clamp(36px, 15vw, 64px);
+  font-weight: bold;
+  margin: 20px 0;
+}
+
+.score-display p {
+  margin-bottom: 0;
+  font-size: clamp(13px, 3vw, 14px);
+}
+
+/* Experiment card responsive */
+.experiment-card {
+  padding: 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.experiment-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.experiment-card h3 {
+  margin-top: 0;
+  font-size: clamp(15px, 4vw, 18px);
+  margin-bottom: 10px;
+}
+
+.experiment-card p {
+  font-size: clamp(13px, 3vw, 14px);
+  margin-bottom: 15px;
+  line-height: 1.5;
+}
+
+.experiment-card button {
+  width: 100%;
+  padding: 12px;
+  font-size: clamp(13px, 3vw, 14px);
+}
+
+@media (max-width: 480px) {
+  .experiment-card {
+    padding: 15px;
+  }
+
+  .experiment-card button {
+    padding: 10px;
+  }
+}
+
+/* Link styling */
+a {
+  color: #667eea;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+a:hover {
+  color: #764ba2;
+  text-decoration: underline;
+}
+
+/* Responsive text utilities */
+@media (max-width: 768px) {
+  body {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    font-size: 13px;
+  }
+
+  .header {
+    padding: 15px;
+  }
+
+  .header h1 {
+    font-size: clamp(18px, 5vw, 24px);
+  }
+
+  .nav-buttons {
+    gap: 8px;
+  }
+
+  .nav-buttons button {
+    padding: 8px 12px;
+  }
+}
+
+/* Prevent horizontal scroll on mobile */
+@media (max-width: 480px) {
+  body, html {
+    overflow-x: hidden;
+    width: 100vw;
+  }
+
+  .container, .card, .header {
+    width: 100%;
+    overflow-x: hidden;
+  }
+}
+
+/* Touch-friendly targets */
+@media (hover: none) and (pointer: coarse) {
+  button, a, input[type="radio"], input[type="checkbox"] {
+    min-height: 48px;
+    min-width: 48px;
+  }
+
+  .option {
+    padding: 15px;
+  }
+}
